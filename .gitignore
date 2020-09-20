@@ -128,5 +128,5 @@ dmypy.json
 output/
 
 # Configuration files
-/config/config.json
-/config/tracked_values_list.json
+/web_scraping/config/config.json
+/web_scraping/config/tracked_values_list.json
