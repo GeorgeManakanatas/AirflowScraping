@@ -125,7 +125,7 @@ dmypy.json
 .pyre/
 
 # Results files
-output/
+output/scraping.log
 
 # Configuration files
 /web_scraping/config/config.json
