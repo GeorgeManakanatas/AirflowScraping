@@ -10,7 +10,7 @@
         "schemaname":"scraping_info"
     },
     "logging_configuration":{
-        "folder":"output/",
+        "folder":"generated_resources/",
         "filename":"scraping.log"
     },
     "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],

@@ -20,15 +20,15 @@ class PostgresqlInterface:
                 
         '''
         try:
-            # logger.info('postgresql connection : %s', my_config.config_values['postgresql_connection'])
-            self.host = my_config.config_values['postgresql_connection']['host']
-            self.schemaname = my_config.config_values['postgresql_connection']['schemaname']
-            self.port = my_config.config_values['postgresql_connection']['port']
-            self.dbname = my_config.config_values['postgresql_connection']['dbname']
-            self.user = my_config.config_values['postgresql_connection']['user']
-            self.password = my_config.config_values['postgresql_connection']['password']
+            # logger.info('postgresql connection : %s', my_config.config_values['generic_scraper']['postgresql_connection'])
+            self.host = my_config.config_values['generic_scraper']['postgresql_connection']['host']
+            self.schemaname = my_config.config_values['generic_scraper']['postgresql_connection']['schemaname']
+            self.port = my_config.config_values['generic_scraper']['postgresql_connection']['port']
+            self.dbname = my_config.config_values['generic_scraper']['postgresql_connection']['dbname']
+            self.user = my_config.config_values['generic_scraper']['postgresql_connection']['user']
+            self.password = my_config.config_values['generic_scraper']['postgresql_connection']['password']
         except KeyError:
-            logger.info('postgresql connection key error : %s', my_config.config_values['postgresql_connection'])
+            logger.info('postgresql connection key error : %s', my_config.config_values['generic_scraper']['postgresql_connection'])
             self.host = host
             self.schemaname = schemaname
             self.port = port
