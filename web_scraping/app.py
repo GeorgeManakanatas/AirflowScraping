@@ -4,6 +4,8 @@ import selenium
 import random
 import time
 import json
+import xlsxwriter
+from datetime import datetime
 import urllib.robotparser
 from lxml import etree
 from bs4 import BeautifulSoup
@@ -201,7 +203,7 @@ for class_string in classes_to_look_for:
   entry = {statistic.find("td").find("a")["title"]:statistic.find("td", class_=("mw-statistics-numbers")).getText()}
   stored_data["Statistics"].update(entry)
 # get bots
-entry = {table.find("tr", class_="statistics-group-bot").find("td").find("a").getText():statistic.find("td", class_=("mw-statistics-numbers")).getText()}
+entry = {table.find("tr", class_="statistics-group-bot").find("td").find("a").getText():table.find("tr", class_="statistics-group-bot").find("td", class_=("mw-statistics-numbers")).getText()}
 stored_data["Statistics"].update(entry)
 # ------------------------------------------------------------------------------------
 logger.info('WaterPages')
@@ -236,33 +238,133 @@ for page in pages:
 # PROSCESSING THE INFORMATION
 # ======================================================================================================== 
 # ALARMS
-user_edits_percent_of_total = 100 - round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)*100
-logger.info("User edits are "+str(user_edits_percent_of_total)+"% of total")
+# % of user edits edits
+user_edits_percent_of_total = 1 - round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
+logger.info("User edits are "+str(int(user_edits_percent_of_total)*100)+"% of total")
+# % of bot edits
+percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
+# bot edits as % of total
+def bot_traffic(stored_data,percent_bots):
+  bot_value = percent_bots*100
+  if bot_value > 50:
+    return("Bot edits are too high at "+str(bot_value)+"% of total")
+logger.info(bot_traffic(stored_data,percent_bots))
+# checks for potential red flags involving active users
+def check_active_users(stored_data,percent_bots):
+  bot_value = percent_bots*100
+  if int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) == 0:
+    if stored_data["RecenteWijzigingen"]["total_individual_changes"] == 0:
+      return("Active users and changes are 0 noone is paying attention!")
+    elif stored_data["RecenteWijzigingen"]["total_individual_changes"] > 0:
+      # calculate the % of changes by bots
+      if bot_value == 100:
+        return("Active users are 0 but changes are made, we are bot central")
+      elif bot_value != 100:
+        return("Active users are 0 but changes by bots are "+str(bot_value)+" so there is an error somewhere")
+logger.info(check_active_users(stored_data,percent_bots))
+# active vs total users
+def user_engagement(stored_data):
+  if int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) == 0:
+    return("0 active users we have no engagement")
+  if int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) > 0 and int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) < 5:
+    return("Active users too low at less than 5!")
+logger.info(user_engagement(stored_data))
 
-# check active users
-
-if int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) == 0:
-  if stored_data["RecenteWijzigingen"]["total_individual_changes"] == 0:
-    logger.info("Active users and changes are 0 noone is paying attention!")
-  elif stored_data["RecenteWijzigingen"]["total_individual_changes"] > 0:
-    # calculate the % of changes by bots
-    percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)*100
-    if percent_bots == 100:
-      logger.info("Active users are 0 but changes are made, we are bot central")
-    elif percent_bots != 100:
-      logger.info("Active users are 0 but changes by bots are "+str(percent_bots)+" so there is an error somewhere")
-
-if int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) > 0 and int(stored_data["Statistics"]["Speciaal:ActieveGebruikers"]) < 5:
-  logger.info("Active users too low!")
-  percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)*100
-
-if percent_bots > 50:
-  logger.info("Bot edits are too high!")
-
+# edits to pages
 logger.info("This week we had: "+str(stored_data["RecenteWijzigingen"]["total_individual_changes"])+" distinct changes spread over: "+str(stored_data["RecenteWijzigingen"]["total_changed_pages"])+" pages.")
+# list of edited pages
 logger.info("The changes where made to the following pages :"+str(stored_data["RecenteWijzigingen"]["list_of_changed_pages"]))
-
+# 
 content_pages_percent_of_total = round(int(stored_data["Statistics"]["Inhoudelijke pagina's"])/int(stored_data["Statistics"]["Pagina's"]),2)*100
 logger.info("Content pages are "+str(content_pages_percent_of_total)+"% of the whole")
+logger.info("There are: "+str(len(stored_data["KortePaginas"]))+" short pages")
+logger.info("There are: "+str(len(stored_data["WeesPaginas"]))+" orphan pages out of a total of :"+str(stored_data["Statistics"]["Inhoudelijke pagina's"])+" content pages")
+logger.info('\n')
+logger.info(stored_data)
 
-# EXCEL SHHEET
+# ======================================================================================================== 
+# EXCEL SHEET
+# ======================================================================================================== 
+
+# support functions
+def make_entry(row, col, entry, worksheet):
+  worksheet.write(row, col, entry)
+
+def enter_key_value(row, col, key, value, worksheet):
+    worksheet.write(row, col, key)
+    worksheet.write(row, col+1, value)
+
+
+
+# Create a workbook and add a worksheet.
+now = datetime.now()
+workbook_name = now.strftime("%Y_%m_%d")+"_report"
+workbook = xlsxwriter.Workbook('generated_resources/output/'+workbook_name+'.xlsx')
+
+# formatting
+merge_format = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter'})
+
+color_format = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'fg_color': 'yellow'})
+
+worksheet_GeneralInfo = workbook.add_worksheet('General Info')
+
+#
+enter_key_value(1, 0, "Weekly edits ", stored_data["RecenteWijzigingen"]["total_individual_changes"],worksheet_GeneralInfo)
+enter_key_value(2, 0, "Edited pages count ", stored_data["RecenteWijzigingen"]["total_changed_pages"],worksheet_GeneralInfo)
+enter_key_value(3, 0, "User edits", stored_data["RecenteWijzigingen"]["total_individual_changes"],worksheet_GeneralInfo)
+enter_key_value(4, 0, "User edits percent of total", user_edits_percent_of_total,worksheet_GeneralInfo)
+enter_key_value(5, 0, "Bot edits", stored_data["RecenteWijzigingen"]["total_bot_edits"],worksheet_GeneralInfo)
+enter_key_value(6, 0, "Bot edits percent of total", percent_bots,worksheet_GeneralInfo)
+enter_key_value(7, 0, "Active users", stored_data["Statistics"]["Speciaal:ActieveGebruikers"],worksheet_GeneralInfo)
+enter_key_value(8, 0, "Short pages", len(stored_data["KortePaginas"]),worksheet_GeneralInfo)
+enter_key_value(9, 0, "Orphan pages",len(stored_data["WeesPaginas"]),worksheet_GeneralInfo)
+
+worksheet_Warnings = workbook.add_worksheet('Warnings')
+
+make_entry(1, 0, check_active_users(stored_data,percent_bots), worksheet_Warnings)
+make_entry(2, 0, bot_traffic(stored_data,percent_bots), worksheet_Warnings)
+make_entry(3, 0, user_engagement(stored_data), worksheet_Warnings)
+
+worksheet_lists = workbook.add_worksheet('Aggregated lists')
+make_entry(0, 0, "KortePaginas", worksheet_lists)
+row = 1
+for page in stored_data["KortePaginas"]:
+  make_entry(row, 0, page, worksheet_lists)
+  row += 1
+
+make_entry(0, 1, "WeesPaginas", worksheet_lists)
+row = 1
+for page in stored_data["WeesPaginas"]:
+  make_entry(row, 1, page, worksheet_lists)
+  row += 1
+
+make_entry(0, 2, "Standaards", worksheet_lists)
+row = 1
+for page in stored_data["Standaards"]:
+  make_entry(row, 2, page, worksheet_lists)
+  row += 1
+
+make_entry(0, 3, "Terms", worksheet_lists)
+row = 1
+for page in stored_data["Terms"]:
+  make_entry(row, 3, page, worksheet_lists)
+  row += 1
+
+worksheet_lists.merge_range('E0:F0', 'MeestVerwezenPaginas', merge_format)
+# make_entry(0, 4, "MeestVerwezenPaginas", worksheet_lists)
+row = 1
+for key in stored_data["MeestVerwezenPaginas"]:
+  enter_key_value(row, 4, key, stored_data["MeestVerwezenPaginas"][key], worksheet_lists)
+  row += 1
+
+
+workbook.close()
