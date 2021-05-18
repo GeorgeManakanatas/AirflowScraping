@@ -4,6 +4,7 @@ import selenium
 import random
 import time
 import json
+import os
 import xlsxwriter
 from datetime import datetime
 import urllib.robotparser
@@ -42,7 +43,8 @@ if my_config.config_values['scrape_vloca']:
       "InhoudelijkePaginas":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/index.php?title=Speciaal:AllePaginas&hideredirects=1",
       "AllePaginas":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/Speciaal:AllePaginas",
       "PopulairePaginas":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/index.php?title=Speciaal:PopularPages&limit=500&offset=0",
-      "WaterPagesHome":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/Categorie:Leefomgeving-_Water_in_de_Stad"
+      "WaterPagesHome":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/Categorie:Leefomgeving-_Water_in_de_Stad",
+      "NewPages":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/Speciaal:NieuwePaginas?namespace=all&tagfilter=&username=&size-mode=min&size=&wpFormIdentifier=newpagesform&limit=500"
   }
   difficult_pages = {
     "RecenteWijzigingen":"https://vloca-kennishub.vlaanderen.be/vloca-kennishub/Speciaal:RecenteWijzigingen?hidenewpages=1&hidelog=1&limit=500&days=7&enhanced=1&urlversion=2",
@@ -55,8 +57,9 @@ if my_config.config_values['scrape_vloca']:
     time.sleep(random.randint(1,3))
     page = requests.get(pages[key], verify=False)
     # soup = BeautifulSoup(page.content, 'html.parser')
-    with open('generated_resources/pages/'+key+'.html', 'wb') as file:
-      file.write(page.content)
+    with open('generated_resources/pages/'+key+'.html', 'w', encoding="utf-8") as file:
+      file.write(str(page.content))
+
 
   logger.info('Starting Chrome driver for selenium')
   opts = webdriver.ChromeOptions()
@@ -71,7 +74,7 @@ if my_config.config_values['scrape_vloca']:
     time.sleep(random.randint(1,3))
     html = driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
     # soup = BeautifulSoup(page.content, 'html.parser')
-    with open('generated_resources/pages/'+key+'.html', 'w') as file:
+    with open('generated_resources/pages/'+key+'.html', 'w', encoding="utf-8") as file:
       file.write(html)
 
 # ======================================================================================================== 
@@ -81,7 +84,7 @@ logger.info('Extracting the information')
 stored_data = {}
 # ------------------------------------------------------------------------------------
 logger.info('KortePaginas')
-with open('generated_resources/pages/KortePaginas.html', 'r') as file:
+with open('generated_resources/pages/KortePaginas.html', 'r', encoding="utf-8") as file:
   KortePaginas = file.read()
 # 
 KortePaginasArray = []
@@ -92,7 +95,7 @@ for elem in pages_list:
 stored_data["KortePaginas"] = KortePaginasArray
 # ------------------------------------------------------------------------------------
 logger.info('MeestVerwezenPaginas')
-with open('generated_resources/pages/MeestVerwezenPaginas.html', 'r') as file:
+with open('generated_resources/pages/MeestVerwezenPaginas.html', 'r', encoding="utf-8") as file:
   MeestVerwezenPaginas = file.read()
 # 
 stored_data["MeestVerwezenPaginas"] = {}
@@ -102,7 +105,7 @@ for elem in pages_list:
   stored_data["MeestVerwezenPaginas"].update({elem.attrib['href']:elem.text})
 # ------------------------------------------------------------------------------------
 logger.info('RecenteWijzigingen')
-with open('generated_resources/pages/RecenteWijzigingen.html', 'r') as file:
+with open('generated_resources/pages/RecenteWijzigingen.html', 'r', encoding="utf-8") as file:
   RecenteWijzigingen = file.read()
 # 
 soup = BeautifulSoup(RecenteWijzigingen, 'html.parser')
@@ -127,47 +130,48 @@ changes_total = {
 stored_data["RecenteWijzigingen"] = changes_total
 # ------------------------------------------------------------------------------------
 logger.info('Weespaginas')
-with open('generated_resources/pages/Weespaginas.html', 'r') as file:
+with open('generated_resources/pages/Weespaginas.html', 'r', encoding="utf-8") as file:
   WeesPaginas = file.read()
 # 
 WeesPaginasArray = []
 soup = BeautifulSoup(WeesPaginas, 'html.parser')
-list = soup.find("ol", class_="special").find_all("li")
+# print(soup)
+content = soup.find("div", class_="mw-spcontent")
+# print(content)
+list = content.find_all("li")
 for page in list:
   title = page.find("a").getText()
   WeesPaginasArray.append(title)
 stored_data["WeesPaginas"] = WeesPaginasArray
 # ------------------------------------------------------------------------------------
 logger.info('Technical principles')
-with open('generated_resources/pages/Technische_principes.html', 'r') as file:
+with open('generated_resources/pages/Technische_principes.html', 'r', encoding="utf-8") as file:
   TechnischePrincipes = file.read()
 # 
-TechnischePrincipesArray = []
+stored_data["TechnischePrincipes"] = {} 
 soup = BeautifulSoup(TechnischePrincipes, 'html.parser')
 list = soup.find_all("div", class_="mw-category-group")
 for group in list:
   titles = group.find_all("li")
   for page in titles:
-    title = page.find("a").getText()
-    TechnischePrincipesArray.append(title)
-stored_data["TechnischePrincipes"] = TechnischePrincipesArray
+    elem = page.find("a")
+    stored_data["TechnischePrincipes"].update({elem["title"]:elem["href"]})
 # ------------------------------------------------------------------------------------
 logger.info('Standards')
-with open('generated_resources/pages/Standaarden.html', 'r') as file:
+with open('generated_resources/pages/Standaarden.html', 'r', encoding="utf-8") as file:
   Standaards = file.read()
 # 
-StandaardsArray = []
+stored_data["Standaards"] = {}
 soup = BeautifulSoup(Standaards, 'html.parser')
 list = soup.find_all("div", class_="mw-category-group")
 for group in list:
-  titles = group.find_all("li")
+  standards = group.find_all("li")
   for page in titles:
-    title = page.find("a").getText()
-    StandaardsArray.append(title)
-stored_data["Standaards"] = StandaardsArray
+    elem = page.find("a")
+    stored_data["Standaards"].update({elem["title"]:elem["href"]})
 # ------------------------------------------------------------------------------------
 logger.info('Terms and concepts')
-with open('generated_resources/pages/Termen_en_Concepten.html', 'r') as file:
+with open('generated_resources/pages/Termen_en_Concepten.html', 'r', encoding="utf-8") as file:
   Terms = file.read()
 # 
 stored_data["Terms"] = {}
@@ -180,7 +184,7 @@ for group in list:
     stored_data["Terms"].update({elem["title"]:elem["href"]})
 # ------------------------------------------------------------------------------------
 logger.info('Statistics')
-with open('generated_resources/pages/Statistieken.html', 'r') as file:
+with open('generated_resources/pages/Statistieken.html', 'r', encoding="utf-8") as file:
   Stats = file.read()
 # 
 stored_data["Statistics"] = {}
@@ -207,7 +211,7 @@ entry = {table.find("tr", class_="statistics-group-bot").find("td").find("a").ge
 stored_data["Statistics"].update(entry)
 # ------------------------------------------------------------------------------------
 logger.info('WaterPages')
-with open('generated_resources/pages/WaterPagesHome.html', 'r') as file:
+with open('generated_resources/pages/WaterPagesHome.html', 'r', encoding="utf-8") as file:
   WaterPages = file.read()
 # 
 stored_data["WaterPages"] = {}
@@ -216,7 +220,30 @@ pages = soup.find_all("div", class_="mw-category-group")
 for page in pages:
   element = page.find("a")
   stored_data["WaterPages"].update({element["title"]:element["href"]})
+# ------------------------------------------------------------------------------------
+logger.info('NewPages')
+with open('generated_resources/pages/NewPages.html', 'r', encoding="utf-8") as file:
+  NewPages = file.read()
+# 
+stored_data["NewPages"] = []
+soup = BeautifulSoup(NewPages, 'html.parser')
+content = soup.find("div", id="mw-content-text").find("ul").find_all("li")
+for page in content:
+  pageInfo = {}
+  # pageInfo.update({"date":page.find("span", class_="mw-newpages-time").getText()})
+  name_url = page.find("a", class_="mw-newpages-pagename")
+  pageInfo["date"]= page.find("span", class_="mw-newpages-time").getText()
+  pageInfo["url"] = str(name_url["href"])
+  pageInfo["name"]= str(name_url["title"])
+  pageInfo["comment"] = str(page.find("span", class_="comment").getText())
+  # print(pageInfo)
+  stored_data["NewPages"].append(pageInfo)  
 
+# print(stored_data["NewPages"])
+# print(len(stored_data["NewPages"]))
+
+
+# ------------------------------------------------------------------------------------
 # print(stored_data["KortePaginas"])
 # print('\n')
 # print(stored_data["MeestVerwezenPaginas"])
@@ -233,6 +260,8 @@ for page in pages:
 # print('\n')
 # print(stored_data["WaterPages"])
 # print('\n')
+# print(stored_data["Statistics"])
+
 
 # ======================================================================================================== 
 # PROSCESSING THE INFORMATION
@@ -280,7 +309,34 @@ logger.info("Content pages are "+str(content_pages_percent_of_total)+"% of the w
 logger.info("There are: "+str(len(stored_data["KortePaginas"]))+" short pages")
 logger.info("There are: "+str(len(stored_data["WeesPaginas"]))+" orphan pages out of a total of :"+str(stored_data["Statistics"]["Inhoudelijke pagina's"])+" content pages")
 logger.info('\n')
-logger.info(stored_data)
+
+# ======================================================================================================== 
+# CHECK FOR MISSING LINKS
+# ======================================================================================================== 
+
+all_pages_links = {}
+# file_path = os.path.join(os.getcwd(), 'pages')
+# logger.info(file_path)
+for filename in os.listdir('generated_resources/pages/'):
+  logger.info('for file: '+filename)
+  all_pages_links[filename.replace('.html','')] = []
+  with open('generated_resources/pages/'+filename, 'r', encoding="utf-8") as file:
+    file_text = file.read() # open in readonly mode
+    for key in stored_data["Terms"]:
+      # logger.info(key)
+      link_string = "https://vloca-kennishub.vlaanderen.be"+stored_data["Terms"][key]+" "+key
+      links_needed = {}
+      # Find term
+      # logger.info('looking for '+key)
+      if (file_text.find(key) != -1):
+          # find link
+          # logger.info("Contains the term "+key)
+          if (file_text.find(link_string) == -1):
+            # logger.info("Does not contain "+link_string)
+            # print ("Does not contain link ")
+            all_pages_links[filename.replace('.html','')].append({key:link_string})
+    # logger.info(all_pages_links[filename.replace('.html','')])
+# logger.info(all_pages_links)
 
 # ======================================================================================================== 
 # EXCEL SHEET
@@ -290,9 +346,10 @@ logger.info(stored_data)
 def make_entry(row, col, entry, worksheet):
   worksheet.write(row, col, entry)
 
-def enter_key_value(row, col, key, value, worksheet):
-    worksheet.write(row, col, key)
-    worksheet.write(row, col+1, value)
+def enter_multiple_columns(row, col, array, worksheet):
+  for value in array:
+    worksheet.write(row, col, value)
+    col +=1
 
 
 
@@ -318,15 +375,29 @@ color_format = workbook.add_format({
 worksheet_GeneralInfo = workbook.add_worksheet('General Info')
 
 #
-enter_key_value(1, 0, "Weekly edits ", stored_data["RecenteWijzigingen"]["total_individual_changes"],worksheet_GeneralInfo)
-enter_key_value(2, 0, "Edited pages count ", stored_data["RecenteWijzigingen"]["total_changed_pages"],worksheet_GeneralInfo)
-enter_key_value(3, 0, "User edits", stored_data["RecenteWijzigingen"]["total_individual_changes"],worksheet_GeneralInfo)
-enter_key_value(4, 0, "User edits percent of total", user_edits_percent_of_total,worksheet_GeneralInfo)
-enter_key_value(5, 0, "Bot edits", stored_data["RecenteWijzigingen"]["total_bot_edits"],worksheet_GeneralInfo)
-enter_key_value(6, 0, "Bot edits percent of total", percent_bots,worksheet_GeneralInfo)
-enter_key_value(7, 0, "Active users", stored_data["Statistics"]["Speciaal:ActieveGebruikers"],worksheet_GeneralInfo)
-enter_key_value(8, 0, "Short pages", len(stored_data["KortePaginas"]),worksheet_GeneralInfo)
-enter_key_value(9, 0, "Orphan pages",len(stored_data["WeesPaginas"]),worksheet_GeneralInfo)
+array = ["Weekly edits ", stored_data["RecenteWijzigingen"]["total_individual_changes"]]
+enter_multiple_columns(1, 0, array ,worksheet_GeneralInfo)
+array = ["Edited pages count ", stored_data["RecenteWijzigingen"]["total_changed_pages"]]
+enter_multiple_columns(2, 0, array,worksheet_GeneralInfo)
+array = ["User edits", stored_data["RecenteWijzigingen"]["total_individual_changes"]]
+enter_multiple_columns(3, 0, array,worksheet_GeneralInfo)
+array = ["User edits percent of total", user_edits_percent_of_total]
+enter_multiple_columns(4, 0, array,worksheet_GeneralInfo)
+array = ["Bot edits", stored_data["RecenteWijzigingen"]["total_bot_edits"]]
+enter_multiple_columns(5, 0, array,worksheet_GeneralInfo)
+array = ["Bot edits percent of total", percent_bots]
+enter_multiple_columns(6, 0, array,worksheet_GeneralInfo)
+array = ["Active users", stored_data["Statistics"]["Speciaal:ActieveGebruikers"]]
+enter_multiple_columns(7, 0, array,worksheet_GeneralInfo)
+
+percent_of_content = int((len(stored_data["KortePaginas"])/int(stored_data["Statistics"]["Inhoudelijke pagina's"]))*100)
+percent_of_total = int((len(stored_data["KortePaginas"])/int(stored_data["Statistics"]["Pagina's"]))*100)
+array = ["Short pages", len(stored_data["KortePaginas"]),"Percent of content pages",percent_of_content,"Percent of total",percent_of_total]
+enter_multiple_columns(8, 0, array,worksheet_GeneralInfo)
+percent_of_content = int((len(stored_data["WeesPaginas"])/int(stored_data["Statistics"]["Inhoudelijke pagina's"]))*100)
+percent_of_total = int((len(stored_data["WeesPaginas"])/int(stored_data["Statistics"]["Pagina's"]))*100)
+array = ["Orphan pages",len(stored_data["WeesPaginas"]),"Percent of content pages",percent_of_content,"Percent of total",percent_of_total]
+enter_multiple_columns(9, 0, array ,worksheet_GeneralInfo)
 
 worksheet_Warnings = workbook.add_worksheet('Warnings')
 
@@ -359,12 +430,32 @@ for page in stored_data["Terms"]:
   make_entry(row, 3, page, worksheet_lists)
   row += 1
 
-worksheet_lists.merge_range('E0:F0', 'MeestVerwezenPaginas', merge_format)
-# make_entry(0, 4, "MeestVerwezenPaginas", worksheet_lists)
+# worksheet_lists.merge_range('E0:F0', 'MeestVerwezenPaginas', merge_format)
+make_entry(0, 4, "MeestVerwezenPaginas", worksheet_lists)
 row = 1
 for key in stored_data["MeestVerwezenPaginas"]:
-  enter_key_value(row, 4, key, stored_data["MeestVerwezenPaginas"][key], worksheet_lists)
+  array = [key, stored_data["MeestVerwezenPaginas"][key]]
+  enter_multiple_columns(row, 4, array, worksheet_lists)
   row += 1
 
+make_entry(0, 6, "NewPages", worksheet_lists)
+row = 1
+for entry in stored_data["NewPages"]:
+  array = [entry["date"], entry["name"], entry["url"]]
+  enter_multiple_columns(row, 6, array, worksheet_lists)
+  row += 1
+
+worksheet_missing_links = workbook.add_worksheet('Missing links')
+
+column = 0
+for key in all_pages_links:
+  row = 0 
+  make_entry(row, column, key, worksheet_missing_links)
+  for entry in all_pages_links[key]:
+    row += 1
+    make_entry(row, column, str(entry), worksheet_missing_links)
+  column += 1
+
+# all_pages_links
 
 workbook.close()
