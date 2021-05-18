@@ -317,25 +317,26 @@ logger.info('\n')
 all_pages_links = {}
 # file_path = os.path.join(os.getcwd(), 'pages')
 # logger.info(file_path)
-for filename in os.listdir('generated_resources/pages/'):
-  logger.info('for file: '+filename)
-  all_pages_links[filename.replace('.html','')] = []
-  with open('generated_resources/pages/'+filename, 'r', encoding="utf-8") as file:
-    file_text = file.read() # open in readonly mode
-    for key in stored_data["Terms"]:
-      # logger.info(key)
-      link_string = "https://vloca-kennishub.vlaanderen.be"+stored_data["Terms"][key]+" "+key
-      links_needed = {}
-      # Find term
-      # logger.info('looking for '+key)
-      if (file_text.find(key) != -1):
-          # find link
-          # logger.info("Contains the term "+key)
-          if (file_text.find(link_string) == -1):
-            # logger.info("Does not contain "+link_string)
-            # print ("Does not contain link ")
-            all_pages_links[filename.replace('.html','')].append({key:link_string})
-    # logger.info(all_pages_links[filename.replace('.html','')])
+for page_key in stored_data["WaterPages"]:
+  # logger.info('for page: '+stored_data["WaterPages"][page_key])
+  all_pages_links[page_key] = []
+  # scraping
+  time.sleep(random.randint(1,3))
+  page = requests.get("https://vloca-kennishub.vlaanderen.be"+stored_data["WaterPages"][page_key], verify=False)
+  content = str(page.content)
+  for key in stored_data["Terms"]:
+    # logger.info(key)
+    link_string = "https://vloca-kennishub.vlaanderen.be"+stored_data["Terms"][key]+" "+key
+    links_needed = {}
+    # Find term
+    logger.info('looking for '+key)
+    if (content.find(key) != -1):
+        # find link
+        logger.info("Contains the term "+key)
+        if (content.find(link_string) == -1):
+          logger.info("Does not contain "+link_string)
+          all_pages_links[page_key].append({key:link_string})
+  # logger.info(all_pages_links[filename.replace('.html','')])
 # logger.info(all_pages_links)
 
 # ======================================================================================================== 
