@@ -1,3 +1,4 @@
+from typing import Counter
 import requests
 import logging
 import selenium
@@ -8,6 +9,7 @@ import os
 import xlsxwriter
 from datetime import datetime
 import urllib.robotparser
+from collections import Counter
 from lxml import etree
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -117,6 +119,12 @@ for changed_page in changed_pages:
 total_changed_pages = len(changed_pages)  
 #  get total of distinct changes
 distinct_changes = soup.find_all("td", class_="mw-enhanced-rc")
+# get list of changes by person
+person_changes = soup.find_all("a", class_="new mw-userlink")
+# get counter of changes
+changes_per_person = Counter(person_changes)
+
+# 
 total_individual_changes = len(distinct_changes)
 # get total of bot edits
 bot_edits = soup.find_all("abbr", class_="botedit")
@@ -125,8 +133,12 @@ changes_total = {
   "total_changed_pages":total_changed_pages,
   "list_of_changed_pages":ChangedPagesArray,
   "total_individual_changes":total_individual_changes,
-  "total_bot_edits":total_bot_edits
+  "total_bot_edits":total_bot_edits,
+  "person_changes_number":{}
   }
+for change in changes_per_person:
+  changes_total["person_changes_number"].update({change["title"]:changes_per_person.get(change)})
+
 stored_data["RecenteWijzigingen"] = changes_total
 # ------------------------------------------------------------------------------------
 logger.info('Weespaginas')
@@ -275,8 +287,10 @@ percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored
 # bot edits as % of total
 def bot_traffic(stored_data,percent_bots):
   bot_value = percent_bots*100
-  if bot_value > 50:
+  if bot_value > 30:
     return("Bot edits are too high at "+str(bot_value)+"% of total")
+  else:
+    return("Bot edits are acceptable at "+str(bot_value)+"% of total")
 logger.info(bot_traffic(stored_data,percent_bots))
 # checks for potential red flags involving active users
 def check_active_users(stored_data,percent_bots):
@@ -289,7 +303,7 @@ def check_active_users(stored_data,percent_bots):
       if bot_value == 100:
         return("Active users are 0 but changes are made, we are bot central")
       elif bot_value != 100:
-        return("Active users are 0 but changes by bots are "+str(bot_value)+" so there is an error somewhere")
+        return("Active users are 0 but changes by bots are "+str(int(bot_value))+" so there is an error somewhere")
 logger.info(check_active_users(stored_data,percent_bots))
 # active vs total users
 def user_engagement(stored_data):
@@ -343,17 +357,6 @@ for page_key in stored_data["WaterPages"]:
 # EXCEL SHEET
 # ======================================================================================================== 
 
-# support functions
-def make_entry(row, col, entry, worksheet):
-  worksheet.write(row, col, entry)
-
-def enter_multiple_columns(row, col, array, worksheet):
-  for value in array:
-    worksheet.write(row, col, value)
-    col +=1
-
-
-
 # Create a workbook and add a worksheet.
 now = datetime.now()
 workbook_name = now.strftime("%Y_%m_%d")+"_report"
@@ -372,6 +375,28 @@ color_format = workbook.add_format({
     'align': 'center',
     'valign': 'vcenter',
     'fg_color': 'yellow'})
+
+warning_format = workbook.add_format({
+    'bold': 1,
+    'border': 1,
+    'align': 'center',
+    'valign': 'vcenter',
+    'fg_color': 'red'})
+
+default_format = workbook.add_format({
+    'align': 'center',
+    'valign': 'vcenter'})
+
+# support functions
+def make_entry(row, col, entry, worksheet, formating=default_format):
+  worksheet.write(row, col, entry, formating)
+
+def enter_multiple_columns(row, col, array, worksheet, formating=default_format):
+  for value in array:
+    worksheet.write(row, col, value, formating)
+    col +=1
+
+
 
 worksheet_GeneralInfo = workbook.add_worksheet('General Info')
 
@@ -399,12 +424,20 @@ percent_of_content = int((len(stored_data["WeesPaginas"])/int(stored_data["Stati
 percent_of_total = int((len(stored_data["WeesPaginas"])/int(stored_data["Statistics"]["Pagina's"]))*100)
 array = ["Orphan pages",len(stored_data["WeesPaginas"]),"Percent of content pages",percent_of_content,"Percent of total",percent_of_total]
 enter_multiple_columns(9, 0, array ,worksheet_GeneralInfo)
+worksheet_GeneralInfo.write(0, 8, "Person",color_format)
+worksheet_GeneralInfo.write(0, 9, "Changes",color_format)
+row = 1 
+# print(stored_data["RecenteWijzigingen"]["person_changes_number"])
+for entry in stored_data["RecenteWijzigingen"]["person_changes_number"]:
+  make_entry(row, 8, str(entry) ,worksheet_GeneralInfo)
+  make_entry(row, 9, str(stored_data["RecenteWijzigingen"]["person_changes_number"][entry]) ,worksheet_GeneralInfo)
+  row += 1
 
 worksheet_Warnings = workbook.add_worksheet('Warnings')
 
-make_entry(1, 0, check_active_users(stored_data,percent_bots), worksheet_Warnings)
+make_entry(1, 0, check_active_users(stored_data,percent_bots), worksheet_Warnings, warning_format)
 make_entry(2, 0, bot_traffic(stored_data,percent_bots), worksheet_Warnings)
-make_entry(3, 0, user_engagement(stored_data), worksheet_Warnings)
+make_entry(3, 0, user_engagement(stored_data), worksheet_Warnings, warning_format)
 
 worksheet_lists = workbook.add_worksheet('Aggregated lists')
 make_entry(0, 0, "KortePaginas", worksheet_lists)
