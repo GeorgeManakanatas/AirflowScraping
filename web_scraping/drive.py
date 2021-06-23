@@ -20,13 +20,13 @@ logger = setup_custom_logger('scraping')
 interface = PostgresqlInterface()
 
 
-if my_config.config_values['initialize_db']:
+if my_config.config_values['generic_scraper']['initialize_db']:
     interface.init_postgresql()
 
 
-if my_config.config_values['check_tracked_values']:
+if my_config.config_values['generic_scraper']['check_tracked_values']:
     logger.info('Getting product values')
-    for entry in my_config.config_values['urls_to_scrape']:
+    for entry in my_config.config_values['generic_scraper']['urls_to_scrape']:
         logger.info('The entry is: %s', str(entry))
         # random time delay
         # time.sleep(random.randint(10,60))
@@ -41,7 +41,7 @@ if my_config.config_values['check_tracked_values']:
                 # create pretty content
                 prettyHTML = soup.prettify("utf-8")
                 # save contents to file to avoid spamming site during dev
-                with open('output/rawHTML.txt', 'wb') as file:
+                with open('generated_resources/pages/rawHTML.txt', 'wb') as file:
                     file.write(prettyHTML)
             else:
                 logger.error('page %s not found', entry['url'])
@@ -50,7 +50,7 @@ if my_config.config_values['check_tracked_values']:
             logger.error('Error getting website url: %s', exc)
 
 # read content from file
-with open('output/rawHTML.txt', 'r') as file:
+with open('generated_resources/pages/rawHTML.txt', 'r') as file:
     content = file.read()
 # parse with BeautifulSoup
 soup = BeautifulSoup(content, 'html.parser')

@@ -14,7 +14,7 @@ reset_postgresql(){
   postgresContainerName="postgresql"
   postgresName="autoscrapedb"
   postgresUserName="postgres"
-  postgresPassword="craptop4"
+  postgresPassword="scrapedbpass"
   postgresEnvironmentPort="5432"
   postgresContainerPort="5432"
   # stop remove and make new container

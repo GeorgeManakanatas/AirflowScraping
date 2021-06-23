@@ -125,8 +125,7 @@ dmypy.json
 .pyre/
 
 # Results files
-output/scraping.log
+generated_resources/logs/vloca.log
 
 # Configuration files
-/web_scraping/config/config.json
-/web_scraping/config/tracked_values_list.json
+/.vscode
