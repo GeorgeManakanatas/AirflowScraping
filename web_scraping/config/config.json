@@ -1,6 +1,6 @@
 {   
     "initialize_db":0,
-    "scrape_vloca":0,
+    "scrape_vloca":1,
     "scrape_drive":0,
     "scrape_amazon":0,
     "generic":{

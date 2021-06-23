@@ -125,7 +125,8 @@ dmypy.json
 .pyre/
 
 # Results files
-generated_resources/logs/vloca.log
-
+web_scraping/generated_resources/logs/vloca.log
+web_scraping/generated_resources/pages/*
+web_scraping/generated_resources/output/*
 # Configuration files
 /.vscode
