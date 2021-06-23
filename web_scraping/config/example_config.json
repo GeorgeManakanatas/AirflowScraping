@@ -1,18 +1,37 @@
 {   
-    "initialize_db":1,
+    "initialize_db":0,
     "check_tracked_values":0,
-    "postgresql_connection":{
-        "host":"localhost",
-        "port":"5432",
-        "dbname":"autoscrapedb",
-        "user":"postgres",
-        "password":"craptop4",
-        "schemaname":"scraping_info"
+    "scrape_vloca":0,
+    "the_drive":{
+        "postgresql_connection":{
+            "host":"localhost",
+            "port":"5432",
+            "dbname":"autoscrapedb",
+            "user":"postgres",
+            "password":"craptop4",
+            "schemaname":"scraping_info"
+        },
+        "logging_configuration":{
+            "folder":"generated_resources/",
+            "filename":"scraping.log"
+        },
+        "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],
+        "website_urls":["http://namegenerators.org/fake-name-generator-bg/"]
     },
-    "logging_configuration":{
-        "folder":"generated_resources/",
-        "filename":"scraping.log"
-    },
-    "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],
-    "website_urls":["http://namegenerators.org/fake-name-generator-bg/"]
+    "VLOCA":{
+        "postgresql_connection":{
+            "host":"localhost",
+            "port":"5432",
+            "dbname":"autoscrapedb",
+            "user":"postgres",
+            "password":"craptop4",
+            "schemaname":"scraping_info"
+        },
+        "logging_configuration":{
+            "folder":"generated_resources/",
+            "filename":"scraping.log"
+        },
+        "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],
+        "website_urls":["http://namegenerators.org/fake-name-generator-bg/"]
+    }
 }

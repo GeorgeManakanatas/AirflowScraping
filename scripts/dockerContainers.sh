@@ -14,20 +14,6 @@ notification(){
   # will display a notification with given text
   zenity --notification --window-icon="info" --text="$1" --timeout=2
 }
-reset_activemq(){
-  # rabbitmq variables
-  activemqName="ActiveMQ"
-  #
-  sudo docker rm -f $activemqName
-  sudo docker run --name $activemqName -d webcenter/activemq:latest
-}
-reset_rabbitmq(){
-  # rabbitmq variables
-  rabitmqName="RabbitMq"
-  #
-  sudo docker rm -f $rabitmqName
-  sudo docker run --name $rabitmqName -d rabbitmq:3
-}
 reset_maria(){
   ./mariaReset.sh
 }
@@ -78,8 +64,6 @@ start_menu(){
   #
   response=$(zenity --height="$windowHeight" --list --checklist \
      --title="$title" --column="" --column="Options" \
-     False "RabbitMQ" \
-     False "ActiveMQ" \
      False "Postgresql" \
      False "MongoDB" \
      False "MariaDB" \
@@ -98,12 +82,6 @@ start_menu(){
 
   IFS=":" ; for word in $response ; do
      case $word in
-        "RabbitMQ")
-          reset_rabbitmq
-          notification "RabbitMQ started" ;;
-        "ActiveMQ")
-          reset_activemq
-          notification "ActiveMQ stared" ;;
         "Postgresql")
           reset_postgresql
           notification "PostgreSQL started" ;;

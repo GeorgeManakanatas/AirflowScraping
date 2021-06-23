@@ -1,8 +1,7 @@
 import logging
 from config import my_config
 
-def setup_custom_logger(name):
-    logging_conf = my_config.config_values['generic_scraper']['logging_configuration']
+def setup_custom_logger(name, logging_conf):
     # logging setup
     my_logger = logging.getLogger(name)
     my_logger.setLevel(logging.DEBUG)

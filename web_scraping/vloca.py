@@ -1,4 +1,5 @@
 from typing import Counter
+import sys
 import requests
 import logging
 import selenium
@@ -23,7 +24,8 @@ from logger.custom_logger import setup_custom_logger
 # Reading config file into global variable
 my_config.config_file()
 # setting up scraping logger
-logger = setup_custom_logger('scraping')
+logging_conf = my_config.config_values['vloca']['logging_configuration']
+logger = setup_custom_logger('vloca', logging_conf)
 # initialize the postgres interface
 
 # ======================================================================================================== 
