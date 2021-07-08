@@ -7,10 +7,11 @@ from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
 
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(2015, 6, 1),
+    "start_date": datetime(2021, 6, 1),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -27,7 +28,7 @@ dag = DAG("tutorial", default_args=default_args, schedule_interval=timedelta(1))
 # t1, t2 and t3 are examples of tasks created by instantiating operators
 t1 = BashOperator(task_id="print_date", bash_command="date", dag=dag)
 
-t2 = BashOperator(task_id="sleep", bash_command="sleep 5", retries=3, dag=dag)
+t2 = BashOperator(task_id="vloca", bash_command="python /usr/local/airflow/dags/vloca.py", retries=1, dag=dag)
 
 templated_command = """
     {% for i in range(5) %}
