@@ -12,12 +12,8 @@ services:
                 max-file: "3"
 
     webserver:
-        image: puckel/docker-airflow:latest
-        # build:
-        #     context: ./
-        #     dockerfile: Dockerfile
-        #     args:
-        #         PYTHON_DEPS: beautifulsoup4==4.8.2
+        # image: puckel/docker-airflow:latest
+        build: .
         restart: always
         depends_on:
             - postgres
@@ -29,10 +25,10 @@ services:
                 max-size: 10m
                 max-file: "3"
         volumes:
-            - ./dags:/usr/local/airflow/dags
+            - C:\Users\manakang\Videos\Repos\AirflowScraping\airflow_docker\dags:/usr/local/airflow/dags
             # - ./plugins:/usr/local/airflow/plugins
         ports:
-            - "8010:8080"
+            - "8080:8080"
         command: webserver
         healthcheck:
             test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
