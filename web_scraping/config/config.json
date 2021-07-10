@@ -1,12 +1,12 @@
 {   
-    "initialize_db":0,
-    "scrape_vloca":1,
-    "scrape_drive":0,
+    "initialize_db":1,
+    "scrape_vloca":0,
+    "scrape_drive":1,
     "scrape_amazon":0,
-    "generic":{
+    "generic_scraper":{
         "postgresql_connection":{
-            "host":"localhost",
-            "port":"5432",
+            "host":"172.19.0.1",
+            "port":"5454",
             "dbname":"autoscrapedb",
             "user":"postgres",
             "password":"scrapedbpass",
@@ -18,6 +18,28 @@
         },
         "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],
         "website_urls":["http://namegenerators.org/fake-name-generator-bg/"]
+    },
+    "thedrive":{
+        "initialize_db":1,
+        "scrape_websites":1,
+        "scrape_sitemaps":1,
+        "scrape_pages":1,
+        "scrape_raw_data":1,
+        "check_product_prices":0,
+        "postgresql_connection":{
+            "host":"172.19.0.1",
+            "port":"5454",
+            "dbname":"autoscrapedb",
+            "user":"postgres",
+            "password":"scrapedbpass",
+            "schemaname":"scraping_info"
+        },
+        "logging_configuration":{
+            "folder":"generated_resources/logs/",
+            "filename":"drive.log"
+        },
+        "robots_keywords":["Sitemap","Allow","Disallow","User-agent"],
+        "website_urls":["https://www.thedrive.com/"]
     },
     "amazon":{
         "postgresql_connection":{
