@@ -11,11 +11,11 @@
 
 reset_postgresql(){
   # postgresql variables
-  postgresContainerName="postgresql"
+  postgresContainerName="scraperpostgresql"
   postgresName="autoscrapedb"
   postgresUserName="postgres"
   postgresPassword="scrapedbpass"
-  postgresEnvironmentPort="5432"
+  postgresEnvironmentPort="5454"
   postgresContainerPort="5432"
   # stop remove and make new container
   sudo docker container stop $postgresContainerName ;
@@ -26,10 +26,13 @@ reset_postgresql(){
                   -e POSTGRESQL_PASSWORD=$postgresPassword \
                   -e POSTGRESQL_DATABASE=$postgresName \
                   -p $postgresEnvironmentPort:$postgresContainerPort \
+                  --restart=always \
                   -d centos/postgresql-96-centos7 ;
   # wait for container to start
   sleep 10 ;
   sudo docker ps -a ;
+  docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' scraperpostgresql;
+  ifconfig ;
 }
 
 #################

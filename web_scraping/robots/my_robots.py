@@ -9,6 +9,39 @@ my_config.config_file()
 logger = logging.getLogger('scraping')
 
 
+def check_keywords(robot_page_content):
+    '''
+    Checks the robot page for specific keywords
+    Parametres:
+        robot_page_content (str): the contents of robots.txt
+    '''
+    # Initialize dictionary
+    keywords = {}
+    # look for keywords in robots.txt
+    for keyword in my_config.config_values['thedrive']['robots_keywords']:
+        # check each word
+        if check_content(robot_page_content,keyword):
+            keywords[keyword] = True 
+        else:
+            keywords[keyword] = False
+    return keywords
+
+def check_content(contents, string_value):
+    '''
+    Detect if substring is in a given string
+    Partameters:
+        contents (str): The string we look in
+        string_value (str): The string we want to find
+    
+    Returns:
+        Boolean: True if foungd False if not
+    '''
+    # check if strting is in the page
+    if string_value in contents:
+        return True
+    else: 
+        return False
+
 def get_page(page_url):
     '''
     Checks is page returns 200 code and if so retreives content
