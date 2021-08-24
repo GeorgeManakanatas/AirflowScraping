@@ -23,18 +23,11 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG("tutorial", default_args=default_args, schedule_interval=timedelta(1))
+dag = DAG("vloca", default_args=default_args, schedule_interval=timedelta(1))
 
 # t1, t2 and t3 are examples of tasks created by instantiating operators
 t1 = BashOperator(task_id="print_date", bash_command="date", dag=dag)
 
 t2 = BashOperator(task_id="vloca", bash_command="python /usr/local/airflow/dags/vloca.py", retries=1, dag=dag)
 
-templated_command = """
-    {% for i in range(5) %}
-        echo "{{ ds }}"
-        echo "{{ macros.ds_add(ds, 7)}}"
-        echo "{{ params.my_param }}"
-    {% endfor %}
-"""
 t2.set_upstream(t1)
