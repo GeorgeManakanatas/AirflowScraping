@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
-    "start_date": datetime(2021, 6, 1),
+    "start_date": datetime(2021, 8, 23),
     "email": ["airflow@airflow.com"],
     "email_on_failure": False,
     "email_on_retry": False,
@@ -37,13 +37,4 @@ templated_command = """
         echo "{{ params.my_param }}"
     {% endfor %}
 """
-
-t3 = BashOperator(
-    task_id="templated",
-    bash_command=templated_command,
-    params={"my_param": "Parameter I passed in"},
-    dag=dag,
-)
-
 t2.set_upstream(t1)
-t3.set_upstream(t1)

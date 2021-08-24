@@ -69,8 +69,17 @@ if my_config.config_values['scrape_vloca']:
 
   logger.info('Starting Chrome driver for selenium')
   opts = webdriver.ChromeOptions()
-  opts.headless = True
-  driver = webdriver.Chrome(ChromeDriverManager().install())
+  opts.add_argument('enable-automation')
+  opts.add_argument('--headless')
+  opts.add_argument('--no-sandbox')
+  opts.add_argument('--disable-dev-shm-usage')
+  opts.add_argument('--disable-extensions')
+  opts.add_argument('--disable-gpu')
+  opts.add_argument('--remote-debugging-port=9222')
+  driver = webdriver.Chrome(ChromeDriverManager().install(), options=opts)
+  # driver = webdriver.Chrome('/usr/local/share/chromedriver', options=opts)
+  # opts.headless = True
+  # driver = webdriver.Chrome(ChromeDriverManager().install())
 
   logger.info('Getting difficult pages')
   for key in difficult_pages:
@@ -283,11 +292,21 @@ for page in content:
 # PROSCESSING THE INFORMATION
 # ======================================================================================================== 
 # ALARMS
-# % of user edits edits
-user_edits_percent_of_total = 1 - round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
-logger.info("User edits are "+str(int(user_edits_percent_of_total)*100)+"% of total")
-# % of bot edits
-percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
+logger.info('stored_data["RecenteWijzigingen"]["total_individual_changes"] = '+str(stored_data["RecenteWijzigingen"]["total_individual_changes"]))
+if int(stored_data["RecenteWijzigingen"]["total_individual_changes"]):
+  # % of user edits edits
+  user_edits_percent_of_total = 1 - round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
+  logger.info("User edits are "+str(int(user_edits_percent_of_total)*100)+"% of total")
+  # % of bot edits
+  percent_bots = round(stored_data["RecenteWijzigingen"]["total_bot_edits"]/stored_data["RecenteWijzigingen"]["total_individual_changes"],2)
+else:
+  # if there are no changes then user and bot edits are 0
+  user_edits_percent_of_total = 0
+  percent_bots = 0
+  logger.info("No edits to the wiki")
+  
+
+
 # bot edits as % of total
 def bot_traffic(stored_data,percent_bots):
   bot_value = percent_bots*100
@@ -364,7 +383,7 @@ for page_key in stored_data["WaterPages"]:
 # Create a workbook and add a worksheet.
 now = datetime.now()
 workbook_name = now.strftime("%Y_%m_%d")+"_report"
-workbook = xlsxwriter.Workbook('generated_resources/output/'+workbook_name+'.xlsx')
+workbook = xlsxwriter.Workbook('/usr/local/airflow/dags/generated_resources/output/'+workbook_name+'.xlsx')
 
 # formatting
 merge_format = workbook.add_format({

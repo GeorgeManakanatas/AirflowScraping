@@ -125,7 +125,17 @@ dmypy.json
 .pyre/
 
 # Results files
-generated_resources/logs/vloca.log
-
+web_scraping/generated_resources/logs/*
+!web_scraping/generated_resources/logs/.gitkeep
+web_scraping/generated_resources/output/*
+!web_scraping/generated_resources/output/.gitkeep
+web_scraping/generated_resources/pages/*
+!web_scraping/generated_resources/pages/.gitkeep
+airflow_docker/dags/generated_resources/logs/*
+!airflow_docker/dags/generated_resources/logs/.gitkeep
+airflow_docker/dags/generated_resources/output/*
+!airflow_docker/dags/generated_resources/output/.gitkeep
+airflow_docker/dags/generated_resources/pages/*
+!airflow_docker/dags/generated_resources/pages/.gitkeep
 # Configuration files
 /.vscode
