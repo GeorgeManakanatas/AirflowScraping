@@ -63,6 +63,15 @@ build_image(){
   docker-compose -f docker-compose-LocalExecutor.yml build --no-cache
   cd ../scripts
 }
+export_postgresql_data(){
+  container=$(zenity --entry --title="Postgres name" --text="Name of container" );
+  docker exec -t $container pg_dumpall -c -U postgres > dump_$container`date +%d-%m-%Y"_"%H_%M_%S`.sql
+}
+import_data_to_postgresql(){
+  dump=$(zenity --entry --title="Dump file" --text="Dump file name" );
+  container=$(zenity --entry --title="Postgres name" --text="Name of container" );
+  cat $dump | docker exec -i $container psql -U postgres
+}
 
 ###################################
 # containers window main function #
@@ -114,7 +123,7 @@ start_menu(){
         "Remove Container" )
           remove_container
           notification "Container removed" ;;
-        "Build Image" )
+        "Build Airflow Image" )
           build_image
           notification "Image built" ;;
         "Show Images")

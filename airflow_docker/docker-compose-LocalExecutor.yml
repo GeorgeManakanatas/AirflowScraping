@@ -25,7 +25,8 @@ services:
                 max-size: 10m
                 max-file: "3"
         volumes:
-            - /home/georgemanakanatas/Documents/projects/AirflowScraping/airflow_docker/dags:/usr/local/airflow/dags
+            # - /home/georgemanakanatas/Documents/projects/AirflowScraping/airflow_docker/dags:/usr/local/airflow/dags
+            - C:\Users\manakang\Videos\Repos\AirflowScraping\airflow_docker/dags:/usr/local/airflow/dags
             # - ./plugins:/usr/local/airflow/plugins
         ports:
             - "8080:8080"
