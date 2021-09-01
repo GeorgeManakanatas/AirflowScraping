@@ -2,17 +2,20 @@ version: '3.7'
 services:
     postgres:
         image: postgres:9.6
+        restart: always
         environment:
             - POSTGRES_USER=airflow
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
+        volumes:
+            # - /home/georgemanakanatas/Documents/projects/AirflowScraping/database:/var/lib/postgresql/data
+            - database_data:/var/lib/postgresql/data
         logging:
             options:
                 max-size: 10m
                 max-file: "3"
 
     webserver:
-        # image: puckel/docker-airflow:latest
         build: .
         restart: always
         depends_on:
@@ -25,8 +28,9 @@ services:
                 max-size: 10m
                 max-file: "3"
         volumes:
+            # - /home/georgemanakanatas/Documents/projects/AirflowScraping/airflow_docker/dags:/usr/local/airflow/dags
             - C:\Users\manakang\Videos\Repos\AirflowScraping\airflow_docker\dags:/usr/local/airflow/dags
-            # - ./plugins:/usr/local/airflow/plugins
+            # - temp_data:/usr/local/airflow/dags
         ports:
             - "8080:8080"
         command: webserver
@@ -35,3 +39,6 @@ services:
             interval: 30s
             timeout: 30s
             retries: 3
+volumes:
+    database_data:
+        external: true
