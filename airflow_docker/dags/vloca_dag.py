@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 default_args = {
 	"owner": "airflow",
 	"depends_on_past": False,
-	"start_date": datetime(2021, 8, 28),
+	"start_date": datetime(2021, 8, 31),
 	"email": ["airflow@airflow.com"],
 	"email_on_failure": False,
 	"email_on_retry": False,
@@ -40,7 +40,7 @@ default_args = {
 }
 
 my_config = {   
-	"scrape_vloca_pages":0,
+	"scrape_vloca_pages":1,
 	"vloca":{
 		"postgresql_connection":{
 			"host":"localhost",
@@ -547,4 +547,4 @@ make_excel_file = PythonOperator(task_id="making_excel", python_callable=making_
 # ======================================================================================================== 
 # ORDER OF OPERATIONS
 # ======================================================================================================== 
-get_pages_request >> get_pages_selenium >> extract_info >> proscess_info >> check_for_missing_links >> make_excel_file
+[get_pages_request, get_pages_selenium] >> extract_info >> proscess_info >> check_for_missing_links >> make_excel_file
