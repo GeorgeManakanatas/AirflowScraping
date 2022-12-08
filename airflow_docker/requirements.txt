@@ -1,6 +1,6 @@
 beautifulsoup4 
 brotlipy==0.7.0
-certifi==2020.12.5
+certifi==2022.12.7
 cffi 
 chardet 
 colorama==0.4.4
